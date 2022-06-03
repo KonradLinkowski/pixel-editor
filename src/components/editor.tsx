@@ -1,7 +1,40 @@
 import { useLocalStorageValue } from '@react-hookz/web';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, MouseEvent } from 'react';
+import styled from 'styled-components';
 import { useColorContext } from '../contexts/color-context';
 import { useCanvas } from '../hooks/use-canvas';
+import { BsPencil } from 'react-icons/bs';
+
+const Canvas = styled.canvas`
+  cursor: none;
+  background-color: white;
+`;
+
+const Container = styled.div`
+  position: relative;
+`;
+
+interface MousePos {
+  x: number;
+  y: number;
+}
+
+interface CursorProps {
+  pos: MousePos;
+  colorValue?: string;
+}
+
+const Cursor = styled.div`
+  font-size: 2rem;
+  position: absolute;
+  pointer-events: none;
+`;
+
+const CursorIcon = styled(BsPencil)`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+`;
 
 export const Editor = () => {
   const { currentColor, colorPalette } = useColorContext();
@@ -9,6 +42,8 @@ export const Editor = () => {
     'pixels',
     Array(16 * 16).fill(undefined)
   );
+  const [pos, setPos] = useState<MousePos | undefined>();
+
   const { ref, render, onClick } = useCanvas({
     onClick: (event, ctx) => {
       const rect = ctx.canvas.getBoundingClientRect();
@@ -40,13 +75,35 @@ export const Editor = () => {
     render();
   }, [pixels, colorPalette]);
 
+  const handleMouseMove = (event: MouseEvent<HTMLCanvasElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    setPos({ x, y });
+  };
+
   return (
-    <canvas
-      width={16 * 16}
-      height={16 * 16}
-      style={{ border: '1px solid black' }}
-      ref={ref}
-      onClick={onClick}
-    ></canvas>
+    <Container>
+      <Canvas
+        onMouseLeave={() => setPos(undefined)}
+        onMouseMove={handleMouseMove}
+        width={16 * 16}
+        height={16 * 16}
+        style={{ border: '1px solid black' }}
+        ref={ref}
+        onClick={onClick}
+      ></Canvas>
+      {pos && (
+        <Cursor
+          style={{
+            top: `${pos.y}px`,
+            left: `${pos.x}px`,
+            color: currentColor?.value ?? 'black',
+          }}
+        >
+          <CursorIcon />
+        </Cursor>
+      )}
+    </Container>
   );
 };
