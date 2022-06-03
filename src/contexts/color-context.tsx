@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 import { Color } from '../types/color';
 import { v4 as uuid } from 'uuid';
+import { useLocalStorageValue } from '@react-hookz/web';
 
 export interface ColorContextData {
   currentColor: Color | undefined;
@@ -14,13 +15,19 @@ export interface ColorContextData {
 const ColorContext = createContext<ColorContextData | undefined>(undefined);
 
 export const ColorContextProvider = ({ children }: { children: ReactNode }) => {
-  const [currentColor, setColor] = useState<Color>();
-  const [colorPalette, setColorPalette] = useState<Color[]>([
-    {
-      id: uuid(),
-      value: '#ff00ff',
-    },
-  ]);
+  const [currentColor, setColor] = useLocalStorageValue<Color | undefined>(
+    'current-color',
+    undefined
+  );
+  const [colorPalette, setColorPalette] = useLocalStorageValue<Color[]>(
+    'color-palette',
+    [
+      {
+        id: uuid(),
+        value: '#ff00ff',
+      },
+    ]
+  );
 
   const { setCurrentColor, addColor, removeColor, changeColor } = useMemo(
     () => ({
@@ -41,7 +48,7 @@ export const ColorContextProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ColorContext.Provider
       value={{
-        currentColor,
+        currentColor: currentColor ?? undefined,
         setCurrentColor,
         addColor,
         changeColor,

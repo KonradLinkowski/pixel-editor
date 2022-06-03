@@ -1,10 +1,12 @@
+import { useLocalStorageValue } from '@react-hookz/web';
 import { useEffect, useState } from 'react';
 import { useColorContext } from '../contexts/color-context';
 import { useCanvas } from '../hooks/use-canvas';
 
 export const Editor = () => {
   const { currentColor, colorPalette } = useColorContext();
-  const [pixels, setPixels] = useState<(string | undefined)[]>(
+  const [pixels, setPixels] = useLocalStorageValue<(string | undefined)[]>(
+    'pixels',
     Array(16 * 16).fill(undefined)
   );
   const { ref, render, onClick } = useCanvas({
