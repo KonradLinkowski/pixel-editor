@@ -17,8 +17,14 @@ const getRandomColor = () => {
 };
 
 export const ColorPalette = () => {
-  const { currentColor, setCurrentColor, colorPalette, addColor, changeColor } =
-    useColorContext();
+  const {
+    currentColor,
+    setCurrentColor,
+    colorPalette,
+    addColor,
+    changeColor,
+    removeColor,
+  } = useColorContext();
   return (
     <div>
       <PaletteContainer>
@@ -29,6 +35,7 @@ export const ColorPalette = () => {
                 colorData={color}
                 current={currentColor?.id === color.id}
                 onClick={() => setCurrentColor(color.id)}
+                onDelete={() => removeColor(color.id)}
               />
             </HoverCard.Trigger>
             <HoverCard.Content>

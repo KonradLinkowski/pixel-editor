@@ -19,11 +19,6 @@ interface MousePos {
   y: number;
 }
 
-interface CursorProps {
-  pos: MousePos;
-  colorValue?: string;
-}
-
 const Cursor = styled.div`
   font-size: 2rem;
   position: absolute;
@@ -43,6 +38,7 @@ export const Editor = () => {
     Array(16 * 16).fill(undefined)
   );
   const [pos, setPos] = useState<MousePos | undefined>();
+  const [needsRerender, setNeedsRerender] = useState(false);
 
   const { ref, render, onClick } = useCanvas({
     onClick: (event, ctx) => {
@@ -57,8 +53,10 @@ export const Editor = () => {
       setPixels((pixels) =>
         pixels.map((pixel, i) => (i === index ? currentColor?.id : pixel))
       );
+      setNeedsRerender(true);
     },
     onRender: (ctx) => {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       pixels.forEach((pixel, i) => {
         if (!pixel) return;
         const y = Math.floor(i / 16);
@@ -72,8 +70,20 @@ export const Editor = () => {
   });
 
   useEffect(() => {
+    setPixels((pixels) =>
+      pixels.map((pixel) => {
+        const stillExists = colorPalette.find((color) => color.id === pixel);
+        return stillExists ? pixel : undefined;
+      })
+    );
+    setNeedsRerender(true);
+  }, [colorPalette]);
+
+  useEffect(() => {
+    if (!needsRerender) return;
     render();
-  }, [pixels, colorPalette]);
+    setNeedsRerender(false);
+  }, [needsRerender]);
 
   const handleMouseMove = (event: MouseEvent<HTMLCanvasElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();

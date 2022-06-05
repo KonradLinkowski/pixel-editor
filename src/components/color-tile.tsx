@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Color } from '../types/color';
-import { MdAdd } from 'react-icons/md';
+import { MdAdd, MdClose } from 'react-icons/md';
 
 interface TileProps {
   current?: boolean;
@@ -8,6 +8,7 @@ interface TileProps {
 }
 
 const Tile = styled.div<TileProps>`
+  position: relative;
   width: 100px;
   height: 100px;
   cursor: pointer;
@@ -16,7 +17,7 @@ const Tile = styled.div<TileProps>`
   justify-content: center;
   align-items: center;
   background-color: ${({ colorValue }) => colorValue};
-  border: ${({ current }) => (current ? '2px solid black' : 'none')};
+  border: ${({ current }) => (current ? '2px solid white' : 'none')};
 `;
 
 const Text = styled.div`
@@ -30,20 +31,42 @@ const Container = styled.div`
   text-align: center;
 `;
 
+const Delete = styled.button`
+  top: 0;
+  right: 0;
+  position: absolute;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+`;
+
 export interface ColorTileProps {
   current?: boolean;
   colorData: Color;
   onClick: () => void;
+  onDelete: () => void;
 }
 
 export const ColorTile = ({
   current = false,
   colorData,
   onClick,
+  onDelete,
 }: ColorTileProps) => {
   return (
     <Container>
-      <Tile onClick={onClick} current={current} colorValue={colorData.value} />
+      <Tile onClick={onClick} current={current} colorValue={colorData.value}>
+        <Delete
+          onClick={(event) => {
+            event.stopPropagation();
+            onDelete();
+          }}
+        >
+          <MdClose />
+        </Delete>
+      </Tile>
       <Text>{colorData.value}</Text>
     </Container>
   );
