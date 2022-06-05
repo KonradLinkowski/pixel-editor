@@ -1,14 +1,27 @@
 import { MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 export interface UseCanvasProps {
-  onClick: (
+  onMouseDown: (
+    event: MouseEvent<HTMLCanvasElement>,
+    ctx: CanvasRenderingContext2D
+  ) => void;
+  onMouseUp: (
+    event: MouseEvent<HTMLCanvasElement>,
+    ctx: CanvasRenderingContext2D
+  ) => void;
+  onMouseMove: (
     event: MouseEvent<HTMLCanvasElement>,
     ctx: CanvasRenderingContext2D
   ) => void;
   onRender: (ctx: CanvasRenderingContext2D) => void;
 }
 
-export const useCanvas = ({ onClick, onRender }: UseCanvasProps) => {
+export const useCanvas = ({
+  onRender,
+  onMouseDown,
+  onMouseUp,
+  onMouseMove,
+}: UseCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -23,18 +36,38 @@ export const useCanvas = ({ onClick, onRender }: UseCanvasProps) => {
     onRender(ctx);
   }, [onRender]);
 
-  const internalOnClick = useCallback(
+  const internalOnMouseDown = useCallback(
     (event: MouseEvent<HTMLCanvasElement>) => {
       const ctx = contextRef.current;
       if (!ctx) throw new Error('Context is not initialized');
-      onClick(event, ctx);
+      onMouseDown(event, ctx);
     },
-    [onClick]
+    [onMouseDown]
+  );
+
+  const internalOnMouseUp = useCallback(
+    (event: MouseEvent<HTMLCanvasElement>) => {
+      const ctx = contextRef.current;
+      if (!ctx) throw new Error('Context is not initialized');
+      onMouseUp(event, ctx);
+    },
+    [onMouseUp]
+  );
+
+  const internalOnMouseMove = useCallback(
+    (event: MouseEvent<HTMLCanvasElement>) => {
+      const ctx = contextRef.current;
+      if (!ctx) throw new Error('Context is not initialized');
+      onMouseMove(event, ctx);
+    },
+    [onMouseMove]
   );
 
   return {
     ref: canvasRef,
-    onClick: internalOnClick,
+    onMouseDown: internalOnMouseDown,
+    onMouseUp: internalOnMouseUp,
+    onMouseMove: internalOnMouseMove,
     render: internalOnRender,
   };
 };

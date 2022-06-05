@@ -1,5 +1,5 @@
 import { useLocalStorageValue } from '@react-hookz/web';
-import { useEffect, useState, MouseEvent } from 'react';
+import { useEffect, useState, MouseEvent, useRef } from 'react';
 import styled from 'styled-components';
 import { useColorContext } from '../contexts/color-context';
 import { useCanvas } from '../hooks/use-canvas';
@@ -39,22 +39,33 @@ export const Editor = () => {
   );
   const [pos, setPos] = useState<MousePos | undefined>();
   const [needsRerender, setNeedsRerender] = useState(false);
+  const isDrawing = useRef(false);
 
-  const { ref, render, onClick } = useCanvas({
-    onClick: (event, ctx) => {
-      const rect = ctx.canvas.getBoundingClientRect();
-      const x = Math.floor(
-        ((event.clientX - rect.left) / ctx.canvas.width) * 16
-      );
-      const y = Math.floor(
-        ((event.clientY - rect.top) / ctx.canvas.height) * 16
-      );
-      const index = y * 16 + x;
-      setPixels((pixels) =>
-        pixels.map((pixel, i) => (i === index ? currentColor?.id : pixel))
-      );
-      setNeedsRerender(true);
+  const draw = (
+    event: MouseEvent<HTMLCanvasElement>,
+    ctx: CanvasRenderingContext2D
+  ) => {
+    const rect = ctx.canvas.getBoundingClientRect();
+    const x = Math.floor(((event.clientX - rect.left) / ctx.canvas.width) * 16);
+    const y = Math.floor(((event.clientY - rect.top) / ctx.canvas.height) * 16);
+    const index = y * 16 + x;
+    setPixels((pixels) =>
+      pixels.map((pixel, i) => (i === index ? currentColor?.id : pixel))
+    );
+    setNeedsRerender(true);
+  };
+
+  const { render, ...handlers } = useCanvas({
+    onMouseMove: (event, ctx) => {
+      setCursorPos(event);
+      if (!isDrawing.current) return;
+      draw(event, ctx);
     },
+    onMouseDown: (event, ctx) => {
+      draw(event, ctx);
+      isDrawing.current = true;
+    },
+    onMouseUp: () => (isDrawing.current = false),
     onRender: (ctx) => {
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       pixels.forEach((pixel, i) => {
@@ -85,10 +96,10 @@ export const Editor = () => {
     setNeedsRerender(false);
   }, [needsRerender]);
 
-  const handleMouseMove = (event: MouseEvent<HTMLCanvasElement>) => {
+  const setCursorPos = (event: MouseEvent<HTMLCanvasElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    const x = Math.floor((event.clientX - rect.left) / 16) * 16 + 8;
+    const y = Math.floor((event.clientY - rect.top) / 16) * 16 + 8;
     setPos({ x, y });
   };
 
@@ -96,12 +107,10 @@ export const Editor = () => {
     <Container>
       <Canvas
         onMouseLeave={() => setPos(undefined)}
-        onMouseMove={handleMouseMove}
         width={16 * 16}
         height={16 * 16}
         style={{ border: '1px solid black' }}
-        ref={ref}
-        onClick={onClick}
+        {...handlers}
       ></Canvas>
       {pos && (
         <Cursor
